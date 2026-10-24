@@ -1,0 +1,39 @@
+name: Pruebas del laboratorio
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend-prefect/requirements.lock
+      - run: pip install -r requirements.lock
+        working-directory: backend-prefect
+      - run: python -m pytest tests -q
+        working-directory: backend-prefect
+        env:
+          PREFECT_SERVER_ANALYTICS_ENABLED: 'false'
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: mobile-authenticator/package-lock.json
+      - run: npm ci
+        working-directory: mobile-authenticator
+      - run: npm test
+        working-directory: mobile-authenticator
+      - run: npm run lint && npm run typecheck
+        working-directory: mobile-authenticator
+      - run: npm run export:android
+        working-directory: mobile-authenticator
+      - run: npm run export:web
+        working-directory: mobile-authenticator
